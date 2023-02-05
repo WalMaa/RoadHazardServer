@@ -1,4 +1,4 @@
-package com.viikko1;
+package com.server;
 
 import com.sun.net.httpserver.*;
 
@@ -13,7 +13,7 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.lang.StringBuilder;
 
-public class Server implements HttpHandler {
+public class Server implements HttpHandler  {
 
     StringBuilder textDump = new StringBuilder("Dumped text: ");
 
@@ -22,7 +22,7 @@ public class Server implements HttpHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-
+       
         if (exchange.getRequestMethod().equalsIgnoreCase("POST")) {
             InputStream stream = exchange.getRequestBody();
             String text = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8)).lines()
@@ -58,7 +58,8 @@ public class Server implements HttpHandler {
 
             outputStream.flush();
             outputStream.close();
-        }
+        } 
+        
 
     }
 
