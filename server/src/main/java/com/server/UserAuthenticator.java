@@ -2,8 +2,9 @@ package com.server;
 
 import java.util.Hashtable;
 import java.util.Map;
+import com.sun.net.httpserver.BasicAuthenticator;
 
-public class UserAuthenticator extends com.sun.net.httpserver.BasicAuthenticator {
+public class UserAuthenticator extends BasicAuthenticator {
     private Map<String, String> users = null;
     
     public UserAuthenticator(String realm) {
@@ -25,7 +26,7 @@ public class UserAuthenticator extends com.sun.net.httpserver.BasicAuthenticator
 
     @Override
     public boolean checkCredentials(String username, String password) {
-        if ( (username.contains(username)) && (password.contains(password)) ) {
+        if (users.get(username).equals(password)) {
             return true;
         }
         else {
