@@ -18,7 +18,7 @@ public class Server {
         
         try {
             HttpsServer server = HttpsServer.create(new InetSocketAddress(8001), 0);
-            SSLContext sslContext = serverSSLContext();
+            SSLContext sslContext = serverSSLContext("keystore.jks", "Pass123");
             
             server.setHttpsConfigurator(new HttpsConfigurator(sslContext) {
                 public void configure(HttpsParameters params) {
@@ -48,10 +48,10 @@ public class Server {
         
     }
     
-    private static SSLContext serverSSLContext() throws Exception {
-        char[] passphrase = "Pass123".toCharArray();
+    private static SSLContext serverSSLContext(String file, String password) throws Exception {
+        char[] passphrase = password.toCharArray();
         KeyStore ks = KeyStore.getInstance("JKS");
-        ks.load(new FileInputStream("keystore.jks"), passphrase);
+        ks.load(new FileInputStream(file), passphrase);
     
         KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
         kmf.init(ks, passphrase);
