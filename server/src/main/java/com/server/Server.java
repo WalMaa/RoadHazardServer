@@ -19,7 +19,7 @@ public class Server {
         try {
             HttpsServer server = HttpsServer.create(new InetSocketAddress(8001), 0);
 
-            SSLContext sslContext = serverSSLContext("keystore.jks", "Pass123");
+            SSLContext sslContext = serverSSLContext(args[0], args[1]);
             server.setHttpsConfigurator(new HttpsConfigurator(sslContext) {
                 public void configure(HttpsParameters params) {
                     InetSocketAddress remote = params.getClientAddress();
@@ -43,7 +43,7 @@ public class Server {
         }
 
     }
-
+    
     private static SSLContext serverSSLContext(String file, String password) throws Exception {
         char[] passphrase = password.toCharArray();
         KeyStore ks = KeyStore.getInstance("JKS");
@@ -58,23 +58,24 @@ public class Server {
         SSLContext ssl = SSLContext.getInstance("TLS");
         ssl.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
         return ssl;
-    }
+    } 
 
-    /*
-     * private static SSLContext serverSSlContext() throws Exception {
-     * char[] passphrase = "Pass123".toCharArray();
-     * KeyStore ks = KeyStore.getInstance("JKS");
-     * ks.load(new FileInputStream("keystore.jks"), passphrase);
-     * 
-     * KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
-     * kmf.init(ks, passphrase);
-     * TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
-     * tmf.init(ks);
-     * 
-     * SSLContext ssl = SSLContext.getInstance("TLS");
-     * ssl.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
-     * return ssl;
-     * }
-     */
+        /*
+      private static SSLContext serverSSlContext() throws Exception {
+      char[] passphrase = "Pass123".toCharArray();
+      KeyStore ks = KeyStore.getInstance("JKS");
+      ks.load(new FileInputStream("keystore.jks"), passphrase);
+      
+      KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
+      kmf.init(ks, passphrase);
+      TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
+      tmf.init(ks);
+      
+      SSLContext ssl = SSLContext.getInstance("TLS");
+      ssl.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+      return ssl;
+      } 
+      */
+     
 
 }

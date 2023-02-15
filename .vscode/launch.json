@@ -8,14 +8,16 @@
             "type": "java",
             "name": "Launch Current File",
             "request": "launch",
-            "mainClass": "${file}"
+            "mainClass": "${file}",
+            "args": "keystore.jks Pass123"
         },
         {
             "type": "java",
             "name": "Launch Server",
             "request": "launch",
             "mainClass": "com.server.Server",
-            "projectName": "server"
+            "projectName": "server",
+            "args": "keystore.jks Pass123"
         }
     ]
 }
