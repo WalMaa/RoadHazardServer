@@ -13,13 +13,13 @@ import com.sun.net.httpserver.HttpsServer;
 import com.sun.net.httpserver.HttpsConfigurator;
 
 public class Server {
-    
+
     public static void main(String[] args) throws Exception {
-        
+
         try {
             HttpsServer server = HttpsServer.create(new InetSocketAddress(8001), 0);
+
             SSLContext sslContext = serverSSLContext("keystore.jks", "Pass123");
-            
             server.setHttpsConfigurator(new HttpsConfigurator(sslContext) {
                 public void configure(HttpsParameters params) {
                     InetSocketAddress remote = params.getClientAddress();
@@ -28,15 +28,11 @@ public class Server {
                     params.setSSLParameters(sslparams);
                 }
             });
-
             HttpContext context = server.createContext("/warning", new HandleWarnings());
-            
+
             UserAuthenticator userAuth = new UserAuthenticator(null);
             context.setAuthenticator(userAuth);
-
             server.createContext("/registration", new RegistrationHandler(userAuth));
-
-            //creates a default executor
             server.setExecutor(null);
             server.start();
         } catch (FileNotFoundException e) {
@@ -45,23 +41,40 @@ public class Server {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        
+
     }
-    
+
     private static SSLContext serverSSLContext(String file, String password) throws Exception {
         char[] passphrase = password.toCharArray();
         KeyStore ks = KeyStore.getInstance("JKS");
         ks.load(new FileInputStream(file), passphrase);
-    
+
         KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
         kmf.init(ks, passphrase);
-    
+
         TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
         tmf.init(ks);
-    
+
         SSLContext ssl = SSLContext.getInstance("TLS");
         ssl.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
         return ssl;
     }
+
+    /*
+     * private static SSLContext serverSSlContext() throws Exception {
+     * char[] passphrase = "Pass123".toCharArray();
+     * KeyStore ks = KeyStore.getInstance("JKS");
+     * ks.load(new FileInputStream("keystore.jks"), passphrase);
+     * 
+     * KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
+     * kmf.init(ks, passphrase);
+     * TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
+     * tmf.init(ks);
+     * 
+     * SSLContext ssl = SSLContext.getInstance("TLS");
+     * ssl.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+     * return ssl;
+     * }
+     */
 
 }
