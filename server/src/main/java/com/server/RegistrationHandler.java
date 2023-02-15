@@ -26,7 +26,7 @@ public class RegistrationHandler implements HttpHandler {
             String[] credentialArray = text.split(":");
 
             //addUser checks whether the user exists is the credentialArray; returning false if it exists
-            if (userAuthenticator.addUser(credentialArray[0], credentialArray[1])) {
+            if (userAuthenticator.addUser(credentialArray[0], credentialArray[1]) && (credentialArray[0].length() > 0) && credentialArray[1].length() > 0) {
                 exchange.sendResponseHeaders(200, -1);
             } else {
                 String responseString = "User already exists";
