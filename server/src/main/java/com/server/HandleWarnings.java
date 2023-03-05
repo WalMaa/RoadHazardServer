@@ -44,7 +44,6 @@ public class HandleWarnings implements HttpHandler {
                 log.error("Error creating JSONObject.", e);
                 e.printStackTrace();
             }
-
             WarningMessage warning = new WarningMessage(obj);
             warningList.add(warning);
             log.info("Warning added");
