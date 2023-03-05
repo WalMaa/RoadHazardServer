@@ -28,9 +28,9 @@ public class Server {
                     params.setSSLParameters(sslparams);
                 }
             });
-            HttpContext context = server.createContext("/warning", new HandleWarnings());
-
+            
             UserAuthenticator userAuth = new UserAuthenticator(null);
+            HttpContext context = server.createContext("/warning", new HandleWarnings(userAuth));
             context.setAuthenticator(userAuth);
             server.createContext("/registration", new RegistrationHandler(userAuth));
             server.setExecutor(null);
@@ -59,23 +59,4 @@ public class Server {
         ssl.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
         return ssl;
     } 
-
-        /*
-      private static SSLContext serverSSlContext() throws Exception {
-      char[] passphrase = "Pass123".toCharArray();
-      KeyStore ks = KeyStore.getInstance("JKS");
-      ks.load(new FileInputStream("keystore.jks"), passphrase);
-      
-      KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
-      kmf.init(ks, passphrase);
-      TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
-      tmf.init(ks);
-      
-      SSLContext ssl = SSLContext.getInstance("TLS");
-      ssl.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
-      return ssl;
-      } 
-      */
-     
-
 }
