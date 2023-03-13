@@ -1,27 +1,40 @@
 package com.server;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+
 import org.json.JSONObject;
 
 public class WarningMessage {
 
     private String nick;
-    private String latitude;
-    private String longitude;
+    private double latitude;
+    private double longitude;
+    private ZonedDateTime sent;
     private String dangertype;
-
     private JSONObject obj = new JSONObject();
+
+    ZonedDateTime now = ZonedDateTime.now(ZoneId.of("UTC"));
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX");
+    String dateText = now.format(formatter);
 
     public WarningMessage(JSONObject obj) {
         nick = obj.getString("nickname");
-        longitude = obj.getString("longitude");
-        latitude = obj.getString("latitude");
+        longitude = obj.getDouble("longitude");
+        latitude = obj.getDouble("latitude");
         dangertype = obj.getString("dangertype");
+        //converting from string JSON to ZonedDateTime
+        String dateString = obj.getString("sent");
+        sent = ZonedDateTime.parse(dateString, DateTimeFormatter.ISO_ZONED_DATE_TIME);
+
 
         this.obj = obj;
         obj.put("nickname", nick);
         obj.put("longitude", longitude);
         obj.put("latitude", latitude);
         obj.put("dangertype", dangertype);
+        obj.put("sent", sent);
     }
 
     public JSONObject getJSONObject() {
@@ -35,16 +48,16 @@ public class WarningMessage {
     public void setNick(String nick) {
         this.nick = nick;
     }
-    public String getLatitude() {
+    public double getLatitude() {
         return latitude;
     }
-    public void setLatitude(String latitude) {
+    public void setLatitude(double latitude) {
         this.latitude = latitude;
     }
-    public String getLongitude() {
+    public double getLongitude() {
         return longitude;
     }
-    public void setLongitude(String longitude) {
+    public void setLongitude(double longitude) {
         this.longitude = longitude;
     }
     public String getDangertype() {
@@ -52,5 +65,11 @@ public class WarningMessage {
     }
     public void setDangertype(String dangertype) {
         this.dangertype = dangertype;
+    }
+    public ZonedDateTime getSent() {
+        return sent;
+    }
+    public void setSent(ZonedDateTime sent) {
+        this.sent = sent;
     }
 }

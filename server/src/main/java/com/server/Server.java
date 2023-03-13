@@ -15,7 +15,7 @@ import com.sun.net.httpserver.HttpsConfigurator;
 public class Server {
 
     public static void main(String[] args) throws Exception {
-
+        
         try {
             HttpsServer server = HttpsServer.create(new InetSocketAddress(8001), 0);
 
