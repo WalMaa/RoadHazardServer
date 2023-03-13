@@ -2,10 +2,12 @@ package com.server;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,58 +64,88 @@ public class MessageDatabase {
         createStatement.close();
     }
 
-    public JSONObject getMessages() throws SQLException {
+    public JSONArray getMessages() throws SQLException {
         Statement queryStatement = null;
-        JSONObject obj = new JSONObject();
+        JSONArray messages = new JSONArray();
         String getMessagesString = "SELECT rowid, user, usermessage FROM data";
 
         queryStatement = dbConnection.createStatement();
         ResultSet rs = queryStatement.executeQuery(getMessagesString);
 
         while (rs.next()) {
-            obj.put("id", rs.getInt("rowid"));
-            obj.put("user", rs.getString("user"));
-            obj.put("usermessage", rs.getString("usermessage"));
+            JSONObject message = new JSONObject();
+            message.put("id", rs.getInt("rowid"));
+            message.put("user", rs.getString("user"));
+            message.put("usermessage", rs.getString("usermessage"));
+            messages.put(message);
         }
 
-        return obj;
+        return messages;
     }
-    //returns true if user was added succesfully
+
+    // returns true if user was added succesfully
     public boolean addUser(JSONObject obj) throws SQLException {
-            //if user exists the following method returns true;
+        // if user exists the following method returns true;
         if (checkIfUserExists(obj.getString("username"))) {
             log.info("User already exists");
             return false;
         }
-        Statement statement = null;
-        String userInsert = "INSERT INTO users (username, password, email)"
-        + "VALUES ('" + obj.getString("username") + "', '" + obj.getString("password")
-        + "', '" + obj.getString("email") + "')";
 
-        statement = dbConnection.createStatement();
-        statement.executeQuery(userInsert);
-        statement.close();
+        // using preparedStatement for SQL injection safety
+        PreparedStatement preparedStatement = null;
+        String userInsert = "INSERT INTO users (username, password, email) VALUES (?, ?, ?)";
+
+        preparedStatement = dbConnection.prepareStatement(userInsert);
+        preparedStatement.setString(1, obj.getString("username"));
+        preparedStatement.setString(2, obj.getString("password"));
+        preparedStatement.setString(3, obj.getString("email"));
+        preparedStatement.executeUpdate();
+        preparedStatement.close();
         return true;
-        
-
     }
-    //returns true if user exists
+
+    // returns true if user exists
     public boolean checkIfUserExists(String username) throws SQLException {
         log.info("Checking user.");
-        Statement queryStatement = null;
+        PreparedStatement queryStatement = null;
         ResultSet rs;
-        String userQuery = "SELECT username FROM users WHERE username =  '" + username + "'";
+        String userQuery = "SELECT username FROM users WHERE username = ?";
 
-        queryStatement = dbConnection.createStatement();
-		rs = queryStatement.executeQuery(userQuery);
+        // using preparedStatement for SQL injection safety
+        queryStatement = dbConnection.prepareStatement(userQuery);
+        queryStatement.setString(1, username);
+        rs = queryStatement.executeQuery(userQuery);
 
-        while (rs.next()) {
-            if (rs.getString("username") == username) {
-                queryStatement.close();
-                return true;
-            }
+        if (rs.next()) {
+            // block entered if user exists
+            queryStatement.close();
+            return true;
         }
         queryStatement.close();
         return false;
+    }
+
+    // returns true if user is successfully authenticated
+    public boolean authenticateUser(String username, String password) throws SQLException {
+        log.info("Authenticating user.");
+        PreparedStatement queryStatement = null;
+        ResultSet rs;
+        String userQuery = "SELECT username, password FROM users WHERE username = ?";
+
+        // using prepared statement for SQL injection safety
+        queryStatement = dbConnection.prepareStatement(userQuery);
+        queryStatement.setString(1, username);
+        rs = queryStatement.executeQuery(userQuery);
+
+        boolean isAuthenticated = false;
+
+        if (rs.next()) {
+            String storedPassword = rs.getString("password");
+            isAuthenticated = storedPassword.equals(password);
+        }
+
+        rs.close();
+        queryStatement.close();
+        return isAuthenticated;
     }
 }

@@ -56,6 +56,7 @@ public class HandleWarnings implements HttpHandler {
                         log.error("Error creating JSONObject.", e);
                         e.printStackTrace();
                     }
+                    userAuthenticator.checkCredentials(obj.optString("username"), obj.getString("password"));
                     WarningMessage warning = new WarningMessage(obj);
                     warningList.add(warning);
                     log.info("Warning added");
@@ -90,7 +91,7 @@ public class HandleWarnings implements HttpHandler {
                         JSONObject warningJSON = message.getJSONObject();
                         responsemessages.put(warningJSON);
                     }
-                    System.out.println(responsemessages);
+
                     log.info("Writing GET response.");
                     byte[] bytes = responsemessages.toString().getBytes("UTF-8");
                     exchange.sendResponseHeaders(code, bytes.length);

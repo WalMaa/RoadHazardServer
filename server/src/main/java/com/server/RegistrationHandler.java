@@ -33,6 +33,7 @@ public class RegistrationHandler implements HttpHandler {
         String responseString = "";
         int code = 200;
         JSONObject obj = null;
+        MessageDatabase db = MessageDatabase.getInstance();
 
         try {
 
@@ -69,7 +70,7 @@ public class RegistrationHandler implements HttpHandler {
                             responseString = "no proper user credentials";
                         } else {
                             log.info("registering user " + obj.getString("username") + " " + obj.getString("password"));
-                            Boolean result = userAuthenticator.addUser(obj);
+                            Boolean result = db.checkIfUserExists(obj.getString("username"));
                             if (result == false) {
                                 code = 405;
                                 responseString = "user already exist";

@@ -1,10 +1,6 @@
 package com.server;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,12 +17,17 @@ public class UserAuthenticator extends BasicAuthenticator {
 
     //returns true if username and password correspond
     @Override
-    public boolean checkCredentials(String username, String password) throws SQLException {
-        if (db.checkIfUserExists(username)) {
-            
+    public boolean checkCredentials(String username, String password) {
+        log.info("Checking credentials for user " + username);
+        try {
+            if (db.checkIfUserExists(username)) {
+                if (db.authenticateUser(username, password)) {
+                    return true;
+                }
+            }
+        } catch (SQLException e) {
+            log.error("SQLException", e);
         }
-
         return false;
     }
-
 } 
