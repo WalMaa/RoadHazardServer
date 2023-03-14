@@ -1,6 +1,8 @@
 package com.server;
 
+import java.time.Instant;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -8,7 +10,7 @@ import org.json.JSONObject;
 
 public class WarningMessage {
 
-    private String nick;
+    private String nickName;
     private double latitude;
     private double longitude;
     private ZonedDateTime sent;
@@ -20,33 +22,39 @@ public class WarningMessage {
     String dateText = now.format(formatter);
 
     public WarningMessage(JSONObject obj) {
-        nick = obj.getString("nickname");
+        nickName = obj.getString("nickname");
         longitude = obj.getDouble("longitude");
         latitude = obj.getDouble("latitude");
         dangertype = obj.getString("dangertype");
         //converting from string JSON to ZonedDateTime
         String dateString = obj.getString("sent");
         sent = ZonedDateTime.parse(dateString, DateTimeFormatter.ISO_ZONED_DATE_TIME);
-
-
+        setSent();
+        dateAsInt();
+        
         this.obj = obj;
-        obj.put("nickname", nick);
+        obj.put("nickname", nickName);
         obj.put("longitude", longitude);
         obj.put("latitude", latitude);
         obj.put("dangertype", dangertype);
         obj.put("sent", sent);
     }
-
-    public JSONObject getJSONObject() {
-        System.out.println("getJSONOBject: " + obj);
-        return obj;
+    
+    void setSent() {
+        long epochTime = System.currentTimeMillis();
+        sent = ZonedDateTime.ofInstant(Instant.ofEpochMilli(epochTime), ZoneOffset.UTC);
     }
 
-    public String getNick() {
-        return nick;
+    public long dateAsInt() {
+        return sent.toInstant().toEpochMilli();
     }
-    public void setNick(String nick) {
-        this.nick = nick;
+
+    
+    public String getNickName() {
+        return nickName;
+    }
+    public void setNickName(String nick) {
+        this.nickName = nick;
     }
     public double getLatitude() {
         return latitude;

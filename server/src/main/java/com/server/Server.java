@@ -13,7 +13,6 @@ import com.sun.net.httpserver.HttpsServer;
 import com.sun.net.httpserver.HttpsConfigurator;
 
 public class Server {
-
     public static void main(String[] args) throws Exception {
         
         try {
@@ -30,7 +29,7 @@ public class Server {
             });
             
             UserAuthenticator userAuth = new UserAuthenticator(null);
-            HttpContext context = server.createContext("/warning", new HandleWarnings(userAuth));
+            HttpContext context = server.createContext("/warning", new WarningHandler(userAuth));
             context.setAuthenticator(userAuth);
             server.createContext("/registration", new RegistrationHandler(userAuth));
             server.setExecutor(null);

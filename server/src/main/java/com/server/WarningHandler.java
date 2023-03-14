@@ -19,12 +19,12 @@ import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
-public class HandleWarnings implements HttpHandler {
-    private static final Logger log = LoggerFactory.getLogger(HandleWarnings.class);
-    private ArrayList<WarningMessage> warningList = new ArrayList<>();
+public class WarningHandler implements HttpHandler {
+    private static final Logger log = LoggerFactory.getLogger(WarningHandler.class);
     UserAuthenticator userAuthenticator;
+    MessageDatabase db = MessageDatabase.getInstance();
     
-    public HandleWarnings(UserAuthenticator uAuth) {
+    public WarningHandler(UserAuthenticator uAuth) {
         userAuthenticator = uAuth;
     }
 
@@ -58,7 +58,7 @@ public class HandleWarnings implements HttpHandler {
                     }
                     userAuthenticator.checkCredentials(obj.optString("username"), obj.getString("password"));
                     WarningMessage warning = new WarningMessage(obj);
-                    warningList.add(warning);
+                    db.setMessage(warning);
                     log.info("Warning added");
                     responseString = "Warning added.";
         

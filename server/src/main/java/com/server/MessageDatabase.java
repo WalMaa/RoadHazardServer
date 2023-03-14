@@ -38,12 +38,12 @@ public class MessageDatabase {
         dbConnection = DriverManager.getConnection(database);
 
         if (dbConnection != null) {
-            String createUserTable = "CREATE TABLE users (username varchar(50) NOT NULL, password varchar(128) NOT NULL, email varchar(50) NOT NULL)";
+            String createUserTable = "CREATE TABLE users (username varchar(50) NOT NULL PRIMARY KEY, password varchar(128) NOT NULL, email varchar(50) NOT NULL, nickname varchar(50))";
             Statement createStatement = dbConnection.createStatement();
             createStatement.executeUpdate(createUserTable);
             createStatement.close();
 
-            String createMsgTable = "CREATE TABLE data (username varchar(50) NOT NULL, usermessage varchar(500) NOT NULL)";
+            String createMsgTable = "CREATE TABLE messages (nickname varchar(50) NOT NULL FOREIGN KEY, dangertype varchar(50) NOT NULL, latitude DOUBLE NOT NULL, longitude DOUBLE NOT NULL, sent INTEGER NOT NULL)";
             createStatement = dbConnection.createStatement();
             createStatement.executeUpdate(createMsgTable);
             createStatement.close();
@@ -56,12 +56,20 @@ public class MessageDatabase {
         return false;
     }
 
-    public void setMessage(JSONObject message) throws SQLException {
-        String setMessageString = "INSERT INTO data " + "VALUES('" + message.getString("message") + "')";
-        Statement createStatement;
-        createStatement = dbConnection.createStatement();
-        createStatement.executeUpdate(setMessageString);
-        createStatement.close();
+    public void setMessage(WarningMessage message) throws SQLException {
+        PreparedStatement preparedStatement = null;
+        String setMessageString = "INSERT INTO messages (nickname, dangertype, latitude, longitude, sent)" +
+        "VALUES (?, ?, ?, ?, ?)";
+        preparedStatement = dbConnection.prepareStatement(setMessageString);
+
+        preparedStatement.setString(1, message.getNickName());
+        preparedStatement.setString(2, message.getDangertype());
+        preparedStatement.setDouble(3, message.getLatitude());
+        preparedStatement.setDouble(4, message.getLongitude());
+        preparedStatement.setLong(5, message.dateAsInt());
+
+        preparedStatement.executeUpdate(setMessageString);
+        preparedStatement.close();
     }
 
     public JSONArray getMessages() throws SQLException {
