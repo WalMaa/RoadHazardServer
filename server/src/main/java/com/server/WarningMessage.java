@@ -80,4 +80,8 @@ public class WarningMessage {
     public void setSent(ZonedDateTime sent) {
         this.sent = sent;
     }
+
+    public JSONObject getJSONObject() {
+        return obj;
+    }
 }

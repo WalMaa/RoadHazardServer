@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
@@ -32,6 +33,7 @@ public class WarningHandler implements HttpHandler {
     public void handle(HttpExchange exchange) throws IOException {
         JSONObject obj = null;
         Headers headers = exchange.getRequestHeaders();
+        ArrayList<WarningMessage> warningList = new ArrayList<>();
         String responseString = "";
         String contentType = "";
         int code = 200;
@@ -58,7 +60,12 @@ public class WarningHandler implements HttpHandler {
                     }
                     userAuthenticator.checkCredentials(obj.optString("username"), obj.getString("password"));
                     WarningMessage warning = new WarningMessage(obj);
-                    db.setMessage(warning);
+                    try {
+                        db.setMessage(warning);
+                    } catch (SQLException e) {
+                        log.error("SQLException", e);
+                    }
+                    
                     log.info("Warning added");
                     responseString = "Warning added.";
         

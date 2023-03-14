@@ -34,7 +34,7 @@ public class MessageDatabase {
 
     private boolean init() throws SQLException {
         String dbName = "MyDatabase";
-        String database = "jdbc:sqlite:C:\\sqlite\\sqlite-tools-win32-x86-3410000" + dbName;
+        String database = "jdbc:sqlite:sqlite-tools-win32-x86-3410000" + dbName;
         dbConnection = DriverManager.getConnection(database);
 
         if (dbConnection != null) {
@@ -43,7 +43,7 @@ public class MessageDatabase {
             createStatement.executeUpdate(createUserTable);
             createStatement.close();
 
-            String createMsgTable = "CREATE TABLE messages (nickname varchar(50) NOT NULL FOREIGN KEY, dangertype varchar(50) NOT NULL, latitude DOUBLE NOT NULL, longitude DOUBLE NOT NULL, sent INTEGER NOT NULL)";
+            String createMsgTable = "CREATE TABLE messages (nickname varchar(50) FOREIGN KEY NOT NULL, dangertype varchar(50) NOT NULL, latitude DOUBLE NOT NULL, longitude DOUBLE NOT NULL, sent INTEGER NOT NULL)";
             createStatement = dbConnection.createStatement();
             createStatement.executeUpdate(createMsgTable);
             createStatement.close();
@@ -59,7 +59,7 @@ public class MessageDatabase {
     public void setMessage(WarningMessage message) throws SQLException {
         PreparedStatement preparedStatement = null;
         String setMessageString = "INSERT INTO messages (nickname, dangertype, latitude, longitude, sent)" +
-        "VALUES (?, ?, ?, ?, ?)";
+                "VALUES (?, ?, ?, ?, ?)";
         preparedStatement = dbConnection.prepareStatement(setMessageString);
 
         preparedStatement.setString(1, message.getNickName());
@@ -75,7 +75,7 @@ public class MessageDatabase {
     public JSONArray getMessages() throws SQLException {
         Statement queryStatement = null;
         JSONArray messages = new JSONArray();
-        String getMessagesString = "SELECT rowid, user, usermessage FROM data";
+        String getMessagesString = "SELECT rowid, username, nickname, dangertype, latitude, longitude, sent FROM messages";
 
         queryStatement = dbConnection.createStatement();
         ResultSet rs = queryStatement.executeQuery(getMessagesString);
@@ -83,8 +83,11 @@ public class MessageDatabase {
         while (rs.next()) {
             JSONObject message = new JSONObject();
             message.put("id", rs.getInt("rowid"));
-            message.put("user", rs.getString("user"));
-            message.put("usermessage", rs.getString("usermessage"));
+            message.put("username", rs.getString("username"));
+            message.put("nickname", rs.getString("dangertype"));
+            message.put("latitude", rs.getDouble("latitude"));
+            message.put("longitude", rs.getDouble("longitude"));
+            message.put("sent", rs.getLong("sent"));
             messages.put(message);
         }
 
@@ -122,7 +125,7 @@ public class MessageDatabase {
         // using preparedStatement for SQL injection safety
         queryStatement = dbConnection.prepareStatement(userQuery);
         queryStatement.setString(1, username);
-        rs = queryStatement.executeQuery(userQuery);
+        rs = queryStatement.executeQuery();
 
         if (rs.next()) {
             // block entered if user exists
@@ -143,7 +146,7 @@ public class MessageDatabase {
         // using prepared statement for SQL injection safety
         queryStatement = dbConnection.prepareStatement(userQuery);
         queryStatement.setString(1, username);
-        rs = queryStatement.executeQuery(userQuery);
+        rs = queryStatement.executeQuery();
 
         boolean isAuthenticated = false;
 
