@@ -43,7 +43,7 @@ public class MessageDatabase {
             createStatement.executeUpdate(createUserTable);
             createStatement.close();
 
-            String createMsgTable = "CREATE TABLE messages (nickname varchar(50) FOREIGN KEY NOT NULL, dangertype varchar(50) NOT NULL, latitude DOUBLE NOT NULL, longitude DOUBLE NOT NULL, sent INTEGER NOT NULL)";
+            String createMsgTable = "CREATE TABLE messages (nickname varchar(50) NOT NULL, dangertype varchar(50) NOT NULL, latitude DOUBLE NOT NULL, longitude DOUBLE NOT NULL, sent INTEGER NOT NULL)";
             createStatement = dbConnection.createStatement();
             createStatement.executeUpdate(createMsgTable);
             createStatement.close();
@@ -95,12 +95,7 @@ public class MessageDatabase {
     }
 
     // returns true if user was added succesfully
-    public boolean addUser(JSONObject obj) throws SQLException {
-        // if user exists the following method returns true;
-        if (checkIfUserExists(obj.getString("username"))) {
-            log.info("User already exists");
-            return false;
-        }
+    public void addUser(JSONObject obj) throws SQLException {
 
         // using preparedStatement for SQL injection safety
         PreparedStatement preparedStatement = null;
@@ -112,7 +107,6 @@ public class MessageDatabase {
         preparedStatement.setString(3, obj.getString("email"));
         preparedStatement.executeUpdate();
         preparedStatement.close();
-        return true;
     }
 
     // returns true if user exists

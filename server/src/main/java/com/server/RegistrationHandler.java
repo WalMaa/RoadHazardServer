@@ -48,7 +48,7 @@ public class RegistrationHandler implements HttpHandler {
                     log.info("Content type available");
                 } else {
                     code = 411;
-                    responseString = "No content type in request";
+                    responseString = "No content type in request.";
                     log.info("No content type available");
                 }
                 if (contentType.equalsIgnoreCase("application/json")) {
@@ -56,10 +56,10 @@ public class RegistrationHandler implements HttpHandler {
                     if (newUser == null || newUser.length() == 0) {
 
                         code = 412;
-                        responseString = "no user credentials";
+                        responseString = "no user credentials.";
 
                     } else {
-
+                        // start of JSON handling
                         try {
                             obj = new JSONObject(newUser);
                         } catch (JSONException e) {
@@ -67,27 +67,28 @@ public class RegistrationHandler implements HttpHandler {
                         }
                         if (obj.getString("username").length() == 0 || obj.getString("password").length() == 0) {
                             code = 413;
-                            responseString = "no proper user credentials";
+                            responseString = "no proper user credentials.";
                         } else {
                             log.info("registering user " + obj.getString("username") + " " + obj.getString("password"));
                             Boolean result = db.checkIfUserExists(obj.getString("username"));
-                            if (result == false) {
+                            if (result == true) {
                                 code = 405;
-                                responseString = "user already exist";
+                                responseString = "user already exists.";
                             } else {
                                 code = 200;
-                                responseString = "User registered";
+                                db.addUser(obj);
+                                responseString = "User registered.";
                             }
                         }
                     }
 
                 } else {
                     code = 407;
-                    responseString = "content type is not application/json";
+                    responseString = "content type is not \"application/json\".";
                 }
             } else {
                 code = 401;
-                responseString = "Not supported";
+                responseString = "Not supported.";
             }
 
             log.info("Writing response");
@@ -115,5 +116,9 @@ public class RegistrationHandler implements HttpHandler {
 
             throw new JSONException(responseString);
         }
+    }
+
+    public void JSONChecker(JSONObject obj) throws JSONException {
+        Double latitude = obj.getDouble("latitude");
     }
 }
