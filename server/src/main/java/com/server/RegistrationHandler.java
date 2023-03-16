@@ -63,7 +63,7 @@ public class RegistrationHandler implements HttpHandler {
                         try {
                             obj = new JSONObject(newUser);
                         } catch (JSONException e) {
-                            log.error("Error creating JSONObject", e);
+                            log.error("JSONException. ", e);
                         }
                         if (obj.getString("username").length() == 0 || obj.getString("password").length() == 0) {
                             code = 413;
@@ -92,33 +92,30 @@ public class RegistrationHandler implements HttpHandler {
             }
 
             log.info("Writing response");
-            byte[] bytes = responseString.getBytes("UTF-8");
-            exchange.sendResponseHeaders(code, bytes.length);
-
-            OutputStream outputStream = exchange.getResponseBody();
-            outputStream.write(responseString.getBytes());
-
-            outputStream.flush();
-            outputStream.close();
+            writeResponse(exchange, code, responseString);
 
         } catch (Exception e) {
+            log.error(responseString, e);
             code = 500;
             responseString = "Could not handle request.";
-            log.error(responseString, e);
-            byte[] bytes = responseString.getBytes("UTF-8");
-            exchange.sendResponseHeaders(code, bytes.length);
-
-            OutputStream outputStream = exchange.getResponseBody();
-            outputStream.write(responseString.getBytes());
-
-            outputStream.flush();
-            outputStream.close();
-
-            throw new JSONException(responseString);
+            try {
+                writeResponse(exchange, code, responseString);
+            } catch (Exception e1) {
+                log.error("Error writing response", e1);
+            }
         }
     }
 
-    public void JSONChecker(JSONObject obj) throws JSONException {
-        Double latitude = obj.getDouble("latitude");
+
+
+    public void writeResponse(HttpExchange exchange, int code, String responseString) throws Exception {
+        byte[] bytes = responseString.getBytes("UTF-8");
+        exchange.sendResponseHeaders(code, bytes.length);
+
+        OutputStream outputStream = exchange.getResponseBody();
+        outputStream.write(responseString.getBytes());
+
+        outputStream.flush();
+        outputStream.close();
     }
 }

@@ -6,6 +6,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.ZoneOffset;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -68,26 +73,29 @@ public class MessageDatabase {
         preparedStatement.setDouble(4, message.getLongitude());
         preparedStatement.setLong(5, message.dateAsInt());
 
-        preparedStatement.executeUpdate(setMessageString);
+        preparedStatement.executeUpdate();
         preparedStatement.close();
     }
 
     public JSONArray getMessages() throws SQLException {
         Statement queryStatement = null;
         JSONArray messages = new JSONArray();
-        String getMessagesString = "SELECT rowid, username, nickname, dangertype, latitude, longitude, sent FROM messages";
+        String getMessagesString = "SELECT nickname, dangertype, latitude, longitude, sent FROM messages";
 
         queryStatement = dbConnection.createStatement();
         ResultSet rs = queryStatement.executeQuery(getMessagesString);
 
         while (rs.next()) {
             JSONObject message = new JSONObject();
-            message.put("id", rs.getInt("rowid"));
-            message.put("username", rs.getString("username"));
-            message.put("nickname", rs.getString("dangertype"));
+            message.put("nickname", rs.getString("nickname"));
+            message.put("dangertype", rs.getString("dangertype"));
             message.put("latitude", rs.getDouble("latitude"));
             message.put("longitude", rs.getDouble("longitude"));
-            message.put("sent", rs.getLong("sent"));
+
+            long epochTime = rs.getLong("sent");
+            ZonedDateTime sent = ZonedDateTime.ofInstant(Instant.ofEpochMilli(epochTime), ZoneOffset.UTC);
+            message.put(("sent"), sent.toString());
+            System.out.println(sent.toString());
             messages.put(message);
         }
 
