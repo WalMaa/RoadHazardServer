@@ -5,6 +5,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.net.InetSocketAddress;
 import java.security.KeyStore;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLParameters;
@@ -32,7 +35,7 @@ public class Server {
             HttpContext context = server.createContext("/warning", new WarningHandler(userAuth));
             context.setAuthenticator(userAuth);
             server.createContext("/registration", new RegistrationHandler(userAuth));
-            server.setExecutor(null);
+            server.setExecutor(Executors.newCachedThreadPool());
             server.start();
         } catch (FileNotFoundException e) {
             System.out.println("Certificate not found!");

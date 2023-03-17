@@ -30,22 +30,27 @@ public class WarningHandler implements HttpHandler {
     private static final int RESPONSE_OK = 200;
     private static final int RESPONSE_UNSUPPORTED_MEDIA_TYPE = 415;
     private static final int RESPONSE_INTERNAL_SERVER_ERROR = 500;
+    private static final int RESPONSE_NO_CONTENT_TYPE = 411;
+    private static final int RESPONSE_NOT_ALLOWED = 405;
     private static final String MESSAGE_TYPE_MOOSE = "Moose";
     private static final String MESSAGE_TYPE_REINDEER = "Reindeer";
     private static final String MESSAGE_TYPE_DEER = "Deer";
     private static final String MESSAGE_TYPE_OTHER = "Other";
-
+    
     public WarningHandler(UserAuthenticator uAuth) {
         userAuthenticator = uAuth;
     }
-
+    
     @Override
     public void handle(HttpExchange exchange) throws IOException {
+
         JSONObject obj = null;
-        Headers headers = exchange.getRequestHeaders();
+        final Headers headers = exchange.getRequestHeaders();
         String responseString = "";
         String contentType = "";
         int code = RESPONSE_OK;
+
+        log.info("Request handled in thread " + Thread.currentThread().getId());
         try {
 
             if (exchange.getRequestMethod().equalsIgnoreCase("POST")) {
@@ -57,6 +62,7 @@ public class WarningHandler implements HttpHandler {
 
                     if (contentType.equalsIgnoreCase(CONTENT_TYPE_JSON)) {
                         log.info("Content-type is " + CONTENT_TYPE_JSON);
+
                         InputStream inStream = exchange.getRequestBody();
                         String message = new BufferedReader(new InputStreamReader(inStream, StandardCharsets.UTF_8))
                                 .lines().collect(Collectors.joining("\n"));
@@ -66,7 +72,7 @@ public class WarningHandler implements HttpHandler {
                         } catch (JSONException e) {
                             log.error("JSONException" + e, e);
                         }
-                        
+
                         JSONChecker(obj);
                         WarningMessage warning = new WarningMessage(obj);
                         try {
@@ -86,7 +92,7 @@ public class WarningHandler implements HttpHandler {
                     }
                 } else {
                     log.error("No content type.");
-                    code = 411;
+                    code = RESPONSE_NO_CONTENT_TYPE;
                     responseString = "No content type in request.";
                 }
 
@@ -98,7 +104,7 @@ public class WarningHandler implements HttpHandler {
                 log.info("Writing GET response.");
             } else {
                 log.error("Other than GET error.");
-                code = 405;
+                code = RESPONSE_NOT_ALLOWED;
                 responseString = "Not supported";
             }
         } catch (Exception e) {
@@ -106,6 +112,7 @@ public class WarningHandler implements HttpHandler {
             code = RESPONSE_INTERNAL_SERVER_ERROR;
             responseString = "Could not handle request.";
         } finally {
+            log.info("Writing response");
             writeResponse(exchange, code, responseString);
         }
     }
@@ -154,13 +161,22 @@ public class WarningHandler implements HttpHandler {
             default:
                 throw new JSONException("Dangertype not supported");
         }
+        // XOR gate checking phone number and area code
+        if (obj.has("areacode") || obj.has("phonenumber")) {
+            if ( (obj.optString("areacode") != null && obj.optString("phonenumber").isEmpty()) || (obj.optString("areacode") == null && !obj.optString("phonenumber").isEmpty()) ) {
+                throw new JSONException("Areacode must be accompanied by a phone number and vice versa");
+            }
+        }
     }
 
     public void writeResponse(HttpExchange exchange, int code, String responseString) throws IOException {
         byte[] bytes = responseString.getBytes("UTF-8");
         exchange.sendResponseHeaders(code, bytes.length);
-        OutputStream stream = exchange.getResponseBody();
-        stream.write(responseString.getBytes());
-        stream.close();
+
+        OutputStream outputStream = exchange.getResponseBody();
+        outputStream.write(responseString.getBytes());
+
+        outputStream.flush();
+        outputStream.close();
     }
 }
