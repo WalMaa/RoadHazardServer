@@ -7,7 +7,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Instant;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.ZoneOffset;
@@ -48,7 +47,7 @@ public class MessageDatabase {
             createStatement.executeUpdate(createUserTable);
             createStatement.close();
 
-            String createMsgTable = "CREATE TABLE messages (nickname varchar(50) NOT NULL, dangertype varchar(50) NOT NULL, latitude DOUBLE NOT NULL, longitude DOUBLE NOT NULL, sent INTEGER NOT NULL)";
+            String createMsgTable = "CREATE TABLE messages (nickname varchar(50) NOT NULL, latitude DOUBLE NOT NULL, longitude DOUBLE NOT NULL, sent INTEGER NOT NULL, dangertype varchar(50) NOT NULL)";
             createStatement = dbConnection.createStatement();
             createStatement.executeUpdate(createMsgTable);
             createStatement.close();
@@ -63,15 +62,14 @@ public class MessageDatabase {
 
     public void setMessage(WarningMessage message) throws SQLException {
         PreparedStatement preparedStatement = null;
-        String setMessageString = "INSERT INTO messages (nickname, dangertype, latitude, longitude, sent)" +
+        String setMessageString = "INSERT INTO messages (nickname, latitude, longitude, sent, dangertype)" +
                 "VALUES (?, ?, ?, ?, ?)";
         preparedStatement = dbConnection.prepareStatement(setMessageString);
-
         preparedStatement.setString(1, message.getNickName());
-        preparedStatement.setString(2, message.getDangertype());
-        preparedStatement.setDouble(3, message.getLatitude());
-        preparedStatement.setDouble(4, message.getLongitude());
-        preparedStatement.setLong(5, message.dateAsInt());
+        preparedStatement.setDouble(2, message.getLatitude());
+        preparedStatement.setDouble(3, message.getLongitude());
+        preparedStatement.setLong(4, message.dateAsInt());
+        preparedStatement.setString(5, message.getDangertype());
 
         preparedStatement.executeUpdate();
         preparedStatement.close();
@@ -80,25 +78,28 @@ public class MessageDatabase {
     public JSONArray getMessages() throws SQLException {
         Statement queryStatement = null;
         JSONArray messages = new JSONArray();
-        String getMessagesString = "SELECT nickname, dangertype, latitude, longitude, sent FROM messages";
+        String getMessagesString = "SELECT nickname, latitude, longitude, sent, dangertype FROM messages";
 
         queryStatement = dbConnection.createStatement();
         ResultSet rs = queryStatement.executeQuery(getMessagesString);
 
         while (rs.next()) {
             JSONObject message = new JSONObject();
+            long epochTime = rs.getLong("sent");
+            System.out.println("epoch in db:" + epochTime);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX");
+            ZonedDateTime date = ZonedDateTime.ofInstant(Instant.ofEpochMilli(epochTime), ZoneOffset.UTC);
+            date.format(formatter);
+
+            System.out.println(message.toString());
             message.put("nickname", rs.getString("nickname"));
-            message.put("dangertype", rs.getString("dangertype"));
             message.put("latitude", rs.getDouble("latitude"));
             message.put("longitude", rs.getDouble("longitude"));
-
-            long epochTime = rs.getLong("sent");
-            ZonedDateTime sent = ZonedDateTime.ofInstant(Instant.ofEpochMilli(epochTime), ZoneOffset.UTC);
-            message.put(("sent"), sent.toString());
-            System.out.println(sent.toString());
+            message.put(("sent"), date.toString());
+            message.put("dangertype", rs.getString("dangertype"));
+            System.out.println(message.toString());
             messages.put(message);
         }
-
         return messages;
     }
 

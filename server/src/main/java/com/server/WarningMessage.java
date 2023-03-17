@@ -14,6 +14,8 @@ public class WarningMessage {
     private double latitude;
     private double longitude;
     private ZonedDateTime sent;
+    private long epochTime;
+    private String jsonDateString;
     private String dangerType;
     private JSONObject obj = new JSONObject();
 
@@ -26,27 +28,30 @@ public class WarningMessage {
         longitude = obj.getDouble("longitude");
         latitude = obj.getDouble("latitude");
         dangerType = obj.getString("dangertype");
+        jsonDateString = obj.getString("sent");
 
         // getting date as epoch
-        sent = ZonedDateTime.parse(dateText, DateTimeFormatter.ISO_ZONED_DATE_TIME);
-        setSent();
-        dateAsInt();
-        
+        sent = ZonedDateTime.parse(jsonDateString);
+        System.out.println(sent);
+        epochTime = sent.toInstant().toEpochMilli();
+
+
         this.obj = obj;
         obj.put("nickname", nickName);
         obj.put("longitude", longitude);
         obj.put("latitude", latitude);
         obj.put("dangertype", dangerType);
-        obj.put("sent", sent);
+        obj.put("sent", epochTime);
     }
     
     void setSent() {
-        long epochTime = System.currentTimeMillis();
         sent = ZonedDateTime.ofInstant(Instant.ofEpochMilli(epochTime), ZoneOffset.UTC);
+        System.out.println(sent);
     }
 
     public long dateAsInt() {
-        return sent.toInstant().toEpochMilli();
+        ZonedDateTime.ofInstant(Instant.ofEpochMilli(epochTime), ZoneOffset.UTC);
+        return epochTime;
     }
 
     public String getNickName() {
@@ -73,10 +78,10 @@ public class WarningMessage {
     public void setDangertype(String dangertype) {
         this.dangerType = dangertype;
     }
-    public ZonedDateTime getSent() {
+    public ZonedDateTime getDate() {
         return sent;
     }
-    public void setSent(ZonedDateTime sent) {
+    public void setDate(ZonedDateTime sent) {
         this.sent = sent;
     }
 

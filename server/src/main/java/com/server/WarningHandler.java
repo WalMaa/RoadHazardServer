@@ -26,6 +26,15 @@ public class WarningHandler implements HttpHandler {
     UserAuthenticator userAuthenticator;
     MessageDatabase db = MessageDatabase.getInstance();
 
+    private static final String CONTENT_TYPE_JSON = "application/json";
+    private static final int RESPONSE_OK = 200;
+    private static final int RESPONSE_UNSUPPORTED_MEDIA_TYPE = 415;
+    private static final int RESPONSE_INTERNAL_SERVER_ERROR = 500;
+    private static final String MESSAGE_TYPE_MOOSE = "Moose";
+    private static final String MESSAGE_TYPE_REINDEER = "Reindeer";
+    private static final String MESSAGE_TYPE_DEER = "Deer";
+    private static final String MESSAGE_TYPE_OTHER = "Other";
+
     public WarningHandler(UserAuthenticator uAuth) {
         userAuthenticator = uAuth;
     }
@@ -36,7 +45,7 @@ public class WarningHandler implements HttpHandler {
         Headers headers = exchange.getRequestHeaders();
         String responseString = "";
         String contentType = "";
-        int code = 200;
+        int code = RESPONSE_OK;
         try {
 
             if (exchange.getRequestMethod().equalsIgnoreCase("POST")) {
@@ -46,19 +55,18 @@ public class WarningHandler implements HttpHandler {
                     contentType = headers.get("Content-Type").get(0);
                     log.info("Content-Type available.");
 
-                    if (contentType.equalsIgnoreCase("application/json")) {
-                        log.info("Content-type is application/json.");
+                    if (contentType.equalsIgnoreCase(CONTENT_TYPE_JSON)) {
+                        log.info("Content-type is " + CONTENT_TYPE_JSON);
                         InputStream inStream = exchange.getRequestBody();
                         String message = new BufferedReader(new InputStreamReader(inStream, StandardCharsets.UTF_8))
                                 .lines().collect(Collectors.joining("\n"));
                         inStream.close();
-                        System.out.println(message.toString());
-
                         try {
                             obj = new JSONObject(message);
                         } catch (JSONException e) {
                             log.error("JSONException" + e, e);
                         }
+                        
                         JSONChecker(obj);
                         WarningMessage warning = new WarningMessage(obj);
                         try {
@@ -72,32 +80,30 @@ public class WarningHandler implements HttpHandler {
 
                         log.info("Writing POST response.");
                     } else {
-                        log.info("Content-Type is not application/json.");
-                        code = 415;
-                        responseString = "Content type is not application/json";
+                        log.error("Content-Type is not " + CONTENT_TYPE_JSON);
+                        code = RESPONSE_UNSUPPORTED_MEDIA_TYPE;
+                        responseString = "Content type is not " + CONTENT_TYPE_JSON;
                     }
                 } else {
-                    log.info("No content type.");
+                    log.error("No content type.");
                     code = 411;
                     responseString = "No content type in request.";
                 }
-                
+
             } else if (exchange.getRequestMethod().equalsIgnoreCase("GET")) {
                 log.info("Entered GET.");
                 JSONArray responsemessages = new JSONArray();
                 responsemessages = db.getMessages();
                 responseString = responsemessages.toString();
-                System.out.println(responsemessages);
                 log.info("Writing GET response.");
             } else {
-                log.info("Other than GET error.");
+                log.error("Other than GET error.");
                 code = 405;
                 responseString = "Not supported";
             }
         } catch (Exception e) {
             log.error("Error: " + e, e);
-            
-            code = 500;
+            code = RESPONSE_INTERNAL_SERVER_ERROR;
             responseString = "Could not handle request.";
         } finally {
             writeResponse(exchange, code, responseString);
@@ -137,12 +143,14 @@ public class WarningHandler implements HttpHandler {
         }
 
         switch (obj.getString("dangertype")) {
-            case "Moose":
+            case MESSAGE_TYPE_MOOSE:
                 break;
-            case "Reindeer":
+            case MESSAGE_TYPE_REINDEER:
                 break;
-            case "Deer":
+            case MESSAGE_TYPE_DEER:
                 break;
+            case MESSAGE_TYPE_OTHER:
+
             default:
                 throw new JSONException("Dangertype not supported");
         }
