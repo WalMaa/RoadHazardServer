@@ -106,14 +106,12 @@ public class MessageDatabase {
             message.put("dangertype", rs.getString("dangertype"));
             try {
                 if (rs.getString("areacode") != null && rs.getString("phonenumber") != null) {
-                    System.out.println(rs.getString("areacode"));
                     message.put("areacode", rs.getString("areacode"));
                     message.put("phonenumber", rs.getString("phonenumber"));
                 }
             } catch (Exception e) {
                 log.error("Phone number data not available", e);
             } 
-            System.out.println(message);
             messages.put(message);
         }
         return messages;
