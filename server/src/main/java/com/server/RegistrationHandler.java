@@ -103,7 +103,7 @@ public class RegistrationHandler implements HttpHandler {
             }
 
         } catch (Exception e) {
-            log.error(responseString, e);
+            log.error("Exception: " + e, e);
             code = RESPONSE_INTERNAL_SERVER_ERROR;
             responseString = "Could not handle request.";
         } finally {

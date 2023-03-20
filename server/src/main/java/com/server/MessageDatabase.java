@@ -45,7 +45,7 @@ public class MessageDatabase {
 
     private boolean init() throws SQLException {
         String dbName = "MyDatabase";
-        String database = "jdbc:sqlite:sqlite-tools-win32-x86-3410000" + dbName;
+        String database = "jdbc:sqlite:sqlite-tools-win32-x86-3410000" + dbName + ".sqlite3";
         dbConnection = DriverManager.getConnection(database);
 
         if (dbConnection != null) {
@@ -152,11 +152,10 @@ public class MessageDatabase {
 
     public JSONArray queryByNickName(String nickName) throws SQLException {
         JSONArray messages = new JSONArray();
-        Statement queryStatement = null;
-        String getMessagesString = "SELECT nickname, latitude, longitude, sent, dangertype, areacode, phonenumber FROM messages WHERE nickname = "
-                + nickName;
-        queryStatement = dbConnection.createStatement();
-        ResultSet rs = queryStatement.executeQuery(getMessagesString);
+        String getMessagesString = "SELECT nickname, latitude, longitude, sent, dangertype, areacode, phonenumber FROM messages WHERE nickname = ?";
+        PreparedStatement statement = dbConnection.prepareStatement(getMessagesString);
+        statement.setString(1, nickName);
+        ResultSet rs = statement.executeQuery();
 
         while (rs.next()) {
             JSONObject message = new JSONObject();
@@ -183,15 +182,91 @@ public class MessageDatabase {
         return messages;
     }
 
-    public JSONObject updateMessage(JSONObject obj, String username) throws SQLException {
+    public JSONArray queryByTime(String timestart, String timeend) throws SQLException {
+        JSONArray messages = new JSONArray();
         
+        // converting timestart and timeend to epoch
+        ZonedDateTime timeStartDate = ZonedDateTime.parse(timestart);
+        ZonedDateTime timeEndDate = ZonedDateTime.parse(timestart);
+        
+        long timeStartEpoch = timeStartDate.toInstant().toEpochMilli();
+        long timeEndEpoch = timeEndDate.toInstant().toEpochMilli();
+        
+        String getMessagesString = "SELECT nickname, latitude, longitude, sent, dangertype, areacode, phonenumber FROM messages WHERE sent BETWEEN ? AND ?";
+        PreparedStatement statement = dbConnection.prepareStatement(getMessagesString);
+        statement.setLong(1, timeStartEpoch);
+        statement.setLong(2, timeEndEpoch);
+        ResultSet rs = statement.executeQuery();
+        
+        while (rs.next()) {
+            JSONObject message = new JSONObject();
+            long epochTime = rs.getLong("sent");
+            ZonedDateTime date = ZonedDateTime.ofInstant(Instant.ofEpochMilli(epochTime), ZoneOffset.UTC);
+            date.format(formatter);
+            
+            message.put("nickname", rs.getString("nickname"));
+            message.put("latitude", rs.getDouble("latitude"));
+            message.put("longitude", rs.getDouble("longitude"));
+            message.put(("sent"), date.toString());
+            message.put("dangertype", rs.getString("dangertype"));
+            try {
+                if (rs.getString("areacode") != null && rs.getString("phonenumber") != null) {
+                    message.put("areacode", rs.getString("areacode"));
+                    message.put("phonenumber", rs.getString("phonenumber"));
+                }
+            } catch (SQLException | JSONException e) {
+                log.error("Phone number data not available", e);
+            }
+            messages.put(message);
+        }
+        rs.close();
+        return messages;
+    }
+
+    public JSONArray queryByLocation(Double upLongitude, Double upLatitude, Double downLongitude, Double downLatitude) throws SQLException {
+        JSONArray messages = new JSONArray();
+        String getMessagesString = "SELECT nickname, latitude, longitude, sent, dangertype, areacode, phonenumber FROM messages WHERE longitude BETWEEN ? AND ? AND latitude BETWEEN ? AND ?";
+        PreparedStatement statement = dbConnection.prepareStatement(getMessagesString);
+        statement.setDouble(1, upLongitude);
+        statement.setDouble(2, downLongitude);
+        statement.setDouble(3, downLatitude);
+        statement.setDouble(4, upLatitude);
+        ResultSet rs = statement.executeQuery();
+        
+        while (rs.next()) {
+            JSONObject message = new JSONObject();
+            long epochTime = rs.getLong("sent");
+            ZonedDateTime date = ZonedDateTime.ofInstant(Instant.ofEpochMilli(epochTime), ZoneOffset.UTC);
+            date.format(formatter);
+            
+            message.put("nickname", rs.getString("nickname"));
+            message.put("latitude", rs.getDouble("latitude"));
+            message.put("longitude", rs.getDouble("longitude"));
+            message.put(("sent"), date.toString());
+            message.put("dangertype", rs.getString("dangertype"));
+            try {
+                if (rs.getString("areacode") != null && rs.getString("phonenumber") != null) {
+                    message.put("areacode", rs.getString("areacode"));
+                    message.put("phonenumber", rs.getString("phonenumber"));
+                }
+            } catch (SQLException | JSONException e) {
+                log.error("Phone number data not available", e);
+            }
+            messages.put(message);
+        }
+        rs.close();
+        System.out.println(messages);
+        return messages;
+    }
+    
+    public JSONObject updateMessage(JSONObject obj, String username) throws SQLException {
         String updateStatement = "UPDATE messages" +
-                " SET nickname = ?," +
-                " longitude = ?," +
-                " latitude = ?," +
-                " modified = ?," +
-                " dangertype = ?," +
-                " areacode = ?," +
+        " SET nickname = ?," +
+        " longitude = ?," +
+        " latitude = ?," +
+        " modified = ?," +
+        " dangertype = ?," +
+        " areacode = ?," +
                 " phonenumber = ?," +
                 " updatereason = ?" +
                 " WHERE rowid = ? AND users_username = ?";
@@ -344,4 +419,6 @@ public class MessageDatabase {
         rs.close();
         return isAuthenticated;
     }
+
+
 }

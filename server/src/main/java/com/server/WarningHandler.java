@@ -72,14 +72,28 @@ public class WarningHandler implements HttpHandler {
                         } catch (JSONException e) {
                             log.error("JSONException" + e, e);
                         }
+
                         if (obj.has("query")) {
+                            // this block handles the queries based on user or time windows
+
+                            final String QUERY_TYPE = obj.getString("query");
                             queryJSONChecker(obj);
-                            responseString = fetchWarningByNick(obj);
+                            if (QUERY_TYPE.equals("user")) {
+                                responseString = fetchWarningByNick(obj);
+                            } else if (QUERY_TYPE.equals("time")) {
+                                responseString = fetchWarningByTime(obj);
+                            } else if (QUERY_TYPE.equals("location")) {
+                                responseString = fetchWarningByLocation(obj);
+                            }
+
                         } else if (obj.has("id")) {
+                            // this block handles the updating of messages
+
                             String username = userAuthenticator.getUsername(exchange);
                             JSONObject updatedMessage = db.updateMessage(obj, username);
                             responseString = updatedMessage.toString();
                         } else {
+                            // this block handles typical adding of messages to the server
 
                             JSONChecker(obj);
                             WarningMessage warning = new WarningMessage(obj);
@@ -125,27 +139,77 @@ public class WarningHandler implements HttpHandler {
         }
     }
 
-    private void queryJSONChecker(JSONObject obj) {
-
+    
+    private void queryJSONChecker(JSONObject obj) throws JSONException {
+        final String QUERY_TYPE = obj.getString("query");
         if (!obj.has("query")) {
             throw new JSONException("Query type must be specified.");
         }
 
-        if (!obj.get("query").equals("user")) {
-            throw new JSONException("Only userquery supported.");
-        }
+        switch (QUERY_TYPE) {
+            case "user":
+                
+                break;
+            case "location":
 
-        if (!obj.has("nickname")) {
-            throw new JSONException("Message must include nickname.");
+                break;
+            case "time":
+        
+                break;
+            default:
+                throw new JSONException("Only user, time or location query supported.");
         }
-
+        
+        if (QUERY_TYPE.equals("user")) {
+            if (!obj.has("nickname")) {
+                throw new JSONException("Message must include nickname.");
+            }
+        }
+        
+        if (QUERY_TYPE.equals("time")) {
+            if (!obj.has("timestart") || !obj.has("timeend")) {
+                throw new JSONException("Message must include timestamps");
+            }
+        }
     }
-
-    private String fetchWarningByNick(JSONObject obj) throws SQLException {
+    
+    private String fetchWarningByLocation(JSONObject obj) {
+        log.info("Fetching warnings by location.");
         String responseString;
         JSONArray responsemessages = new JSONArray();
-        responsemessages = db.queryByNickName(obj.getString("nickname"));
-        log.info("Warnings by user: " + obj.getString("nickname") + "fetched.");
+        Double upLongitude = obj.getDouble("uplongitude");
+        Double upLatitude = obj.getDouble("uplatitude");
+        Double downLongitude = obj.getDouble("downlongitude");
+        Double downLatitude = obj.getDouble("downlatitude");
+        try {
+            responsemessages = db.queryByLocation(upLongitude, upLatitude, downLongitude, downLatitude);
+        } catch (SQLException e) {
+            log.error("SQLException: " + e, e);
+        }
+        return responseString = responsemessages.toString();
+    }
+
+    private String fetchWarningByNick(JSONObject obj) throws JSONException {
+        log.info("Fetching warnings by nickname.");
+        String responseString;
+        JSONArray responsemessages = new JSONArray();
+        try {
+            responsemessages = db.queryByNickName(obj.getString("nickname"));
+        } catch (SQLException e) {
+            log.error("SQLException: " + e, e);
+        }
+        return responseString = responsemessages.toString();
+    }
+
+    private String fetchWarningByTime(JSONObject obj) throws JSONException {
+        log.info("Fetching warnings by time.");
+        String responseString;
+        JSONArray responsemessages = new JSONArray();
+        try {
+            responsemessages = db.queryByTime(obj.getString("timestart"), obj.getString("timeend"));
+        } catch (SQLException e) {
+            log.error("SQLException: " + e, e);
+        }
         return responseString = responsemessages.toString();
     }
 
