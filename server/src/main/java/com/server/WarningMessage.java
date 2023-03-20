@@ -21,9 +21,9 @@ public class WarningMessage {
     private long epochTime;
     private String jsonDateString;
     private JSONObject obj = new JSONObject();
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX");
 
     ZonedDateTime now = ZonedDateTime.now(ZoneId.of("UTC"));
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX");
     String dateText = now.format(formatter);
 
     public WarningMessage(JSONObject obj) {
@@ -37,7 +37,6 @@ public class WarningMessage {
 
         // getting date as epoch
         sent = ZonedDateTime.parse(jsonDateString);
-        System.out.println(sent);
         epochTime = sent.toInstant().toEpochMilli();
 
         this.obj = obj;

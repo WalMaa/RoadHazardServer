@@ -35,6 +35,7 @@ public class Server {
             HttpContext context = server.createContext("/warning", new WarningHandler(userAuth));
             context.setAuthenticator(userAuth);
             server.createContext("/registration", new RegistrationHandler(userAuth));
+            server.createContext("/nicknamequery", new RegistrationHandler(userAuth));
             server.setExecutor(Executors.newCachedThreadPool());
             server.start();
         } catch (FileNotFoundException e) {

@@ -1,5 +1,0 @@
-curl -k -d "@C:\Code\Ohjelmointi3\group-0270-project\user.json" https://localhost:8001/registration -H "Content-Type: application/json"
-
-curl -k -d "@C:\Code\Ohjelmointi3\group-0270-project\message.json" https://localhost:8001/warning -H "Content-Type: application/json" -u "johndoe:password"
-
-curl -k https://localhost:8001/warning -H "Content-Type: application/json" -u "johndoe:password"

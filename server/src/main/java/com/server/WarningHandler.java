@@ -36,11 +36,11 @@ public class WarningHandler implements HttpHandler {
     private static final String MESSAGE_TYPE_REINDEER = "Reindeer";
     private static final String MESSAGE_TYPE_DEER = "Deer";
     private static final String MESSAGE_TYPE_OTHER = "Other";
-    
+
     public WarningHandler(UserAuthenticator uAuth) {
         userAuthenticator = uAuth;
     }
-    
+
     @Override
     public void handle(HttpExchange exchange) throws IOException {
 
@@ -72,18 +72,26 @@ public class WarningHandler implements HttpHandler {
                         } catch (JSONException e) {
                             log.error("JSONException" + e, e);
                         }
+                        if (obj.has("query")) {
+                            queryJSONChecker(obj);
+                            responseString = fetchWarningByNick(obj);
+                        } else if (obj.has("id")) {
+                            String username = userAuthenticator.getUsername(exchange);
+                            JSONObject updatedMessage = db.updateMessage(obj, username);
+                            responseString = updatedMessage.toString();
+                        } else {
 
-                        JSONChecker(obj);
-                        WarningMessage warning = new WarningMessage(obj);
-                        try {
-                            db.setMessage(warning);
-                            log.info("Warning added");
-                            responseString = "Warning added.";
-                        } catch (SQLException e) {
-                            log.error("SQLException", e);
-                            responseString = "Could not add message.";
+                            JSONChecker(obj);
+                            WarningMessage warning = new WarningMessage(obj);
+                            try {
+                                db.setMessage(warning, userAuthenticator.getUsername(exchange));
+                                log.info("Warning added");
+                                responseString = "Warning added:" + warning.getJSONObject();
+                            } catch (SQLException e) {
+                                log.error("SQLException", e);
+                                responseString = "Could not add message.";
+                            }
                         }
-
                         log.info("Writing POST response.");
                     } else {
                         log.error("Content-Type is not " + CONTENT_TYPE_JSON);
@@ -115,6 +123,30 @@ public class WarningHandler implements HttpHandler {
             log.info("Writing response");
             writeResponse(exchange, code, responseString);
         }
+    }
+
+    private void queryJSONChecker(JSONObject obj) {
+
+        if (!obj.has("query")) {
+            throw new JSONException("Query type must be specified.");
+        }
+
+        if (!obj.get("query").equals("user")) {
+            throw new JSONException("Only userquery supported.");
+        }
+
+        if (!obj.has("nickname")) {
+            throw new JSONException("Message must include nickname.");
+        }
+
+    }
+
+    private String fetchWarningByNick(JSONObject obj) throws SQLException {
+        String responseString;
+        JSONArray responsemessages = new JSONArray();
+        responsemessages = db.queryByNickName(obj.getString("nickname"));
+        log.info("Warnings by user: " + obj.getString("nickname") + "fetched.");
+        return responseString = responsemessages.toString();
     }
 
     public void JSONChecker(JSONObject obj) throws JSONException {
@@ -163,7 +195,8 @@ public class WarningHandler implements HttpHandler {
         }
         // XOR gate checking phone number and area code
         if (obj.has("areacode") || obj.has("phonenumber")) {
-            if ( (obj.optString("areacode") != null && obj.optString("phonenumber").isEmpty()) || (obj.optString("areacode") == null && !obj.optString("phonenumber").isEmpty()) ) {
+            if ((obj.optString("areacode") != null && obj.optString("phonenumber").isEmpty())
+                    || (obj.optString("areacode") == null && !obj.optString("phonenumber").isEmpty())) {
                 throw new JSONException("Areacode must be accompanied by a phone number and vice versa");
             }
         }
