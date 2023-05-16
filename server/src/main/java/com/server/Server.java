@@ -18,6 +18,7 @@ import com.sun.net.httpserver.HttpsConfigurator;
 public class Server {
     public static void main(String[] args) throws Exception {
         
+            //Initializing the HTTPS server
         try {
             HttpsServer server = HttpsServer.create(new InetSocketAddress(8001), 0);
 
@@ -34,8 +35,10 @@ public class Server {
             UserAuthenticator userAuth = new UserAuthenticator(null);
             HttpContext context = server.createContext("/warning", new WarningHandler(userAuth));
             context.setAuthenticator(userAuth);
+                //server paths
             server.createContext("/registration", new RegistrationHandler(userAuth));
             server.createContext("/nicknamequery", new RegistrationHandler(userAuth));
+                //initializing multithreading multithreading
             server.setExecutor(Executors.newCachedThreadPool());
             server.start();
         } catch (FileNotFoundException e) {

@@ -175,7 +175,6 @@ public class WarningHandler implements HttpHandler {
     
     private String fetchWarningByLocation(JSONObject obj) {
         log.info("Fetching warnings by location.");
-        String responseString;
         JSONArray responsemessages = new JSONArray();
         Double upLongitude = obj.getDouble("uplongitude");
         Double upLatitude = obj.getDouble("uplatitude");
@@ -186,31 +185,30 @@ public class WarningHandler implements HttpHandler {
         } catch (SQLException e) {
             log.error("SQLException: " + e, e);
         }
-        return responseString = responsemessages.toString();
+        return responsemessages.toString();
     }
 
     private String fetchWarningByNick(JSONObject obj) throws JSONException {
         log.info("Fetching warnings by nickname.");
-        String responseString;
         JSONArray responsemessages = new JSONArray();
         try {
             responsemessages = db.queryByNickName(obj.getString("nickname"));
         } catch (SQLException e) {
             log.error("SQLException: " + e, e);
         }
-        return responseString = responsemessages.toString();
+        
+        return responsemessages.toString();
     }
 
     private String fetchWarningByTime(JSONObject obj) throws JSONException {
         log.info("Fetching warnings by time.");
-        String responseString;
         JSONArray responsemessages = new JSONArray();
         try {
             responsemessages = db.queryByTime(obj.getString("timestart"), obj.getString("timeend"));
         } catch (SQLException e) {
             log.error("SQLException: " + e, e);
         }
-        return responseString = responsemessages.toString();
+        return responsemessages.toString();
     }
 
     public void JSONChecker(JSONObject obj) throws JSONException {
