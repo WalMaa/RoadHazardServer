@@ -1,5 +1,5 @@
 # Road Hazard Server
-This is a student project created in early 2023 as part of my academic studies. Please note that this project is no longer actively maintained and serves only as a showcase of my skills and capabilities at that time. This project is an HTTPS server that allows users to post and modify road hazards, and view them based on coordinates, danger type, and the poster's nickname.
+This is a student project created in early 2023 as part of my academic studies. Please note that this project is no longer actively maintained and serves only as a showcase of my skills and capabilities at that time. This project is an HTTPS server that allows users to post and modify road hazards, and view them based on coordinates, danger type, the time posted and the poster's nickname.
 
 # Project Overview
 
